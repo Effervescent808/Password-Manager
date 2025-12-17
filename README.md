@@ -15,7 +15,7 @@ lists currently saved password names
 #### gen
 Generates a new password of a specified length
 - Requires a password name arg
-##### flags
+#### flags:
   "--length" - Sets password length, defualt is 16
 #### get
 Pulls password from database
