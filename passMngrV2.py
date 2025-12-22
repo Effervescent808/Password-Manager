@@ -7,10 +7,14 @@ import cryptography
 import random
 import string
 import sys
+import getpass
+import os
+import time
 
 # Initialize Database ===========================================================
-# Change path to wherever db is stored
-con = sqlite3.connect("/home/thaufschild/Documents/code/Python/encryptPass.db")
+DB_PATH = "/home/thaufschild/Documents/code/Python/encryptPass.db"
+
+con = sqlite3.connect(DB_PATH)
 cur = con.cursor()
 cur.execute("CREATE TABLE IF NOT EXISTS passwords (id INTEGER PRIMARY KEY AUTOINCREMENT, passName TEXT, username TEXT, password TEXT, hash TEXT)")
 
@@ -19,6 +23,44 @@ app = typer.Typer()
 # Start Typer App ==============================================================
 def main():
     app()
+
+# SET SESSION TIME ============================================================
+SESSION_FILE = "/tmp/passman_auth"
+SESSION_TIMEOUT = 3600
+
+def check_master():
+    cur.execute("SELECT hash FROM passwords WHERE passName = 'master'")
+    master_hash = cur.fetchone()
+    # Check to see if Master Hash exists
+    if master_hash is None: 
+        # Get password
+        typer.echo("No Master Password is Set")
+        typer.echo("Please set one now:")
+        master_pass = typer.prompt(">>> ") 
+
+        # Encrypt
+        encrypted_pass, hash = encrypt(master_pass)
+
+        # Commit
+        cur.execute("INSERT INTO passwords (passName, username, password, hash) VALUES (?,?,?,?)", ["master", "", encrypted_pass, hash])
+        con.commit()
+        typer.echo("Password Successfully Saved")
+    # Check to see if valid session exists - else asks for password
+    else:
+        # See if time of session file edit is less than an hour 
+        if os.path.exists(SESSION_FILE):
+            mtime = os.path.getmtime(SESSION_FILE)
+            if time.time() - mtime < SESSION_TIMEOUT:
+                return True
+        # Loop for getting master pass from user
+        while True:
+            typer.echo("Enter Master Password:")
+            attempt = getpass.getpass(prompt=">>> ")
+            if bcrypt.checkpw(attempt.encode(), master_hash[0]):
+                open(SESSION_FILE, 'w').close()
+                return True
+            else:
+                typer.echo("Incorrect")
 
 # Pull Key from Hash ============================================================
 def getKey(hash):
@@ -63,6 +105,7 @@ def encrypt(password):
 # Add Command ==================================================================
 @app.command()
 def add(pass_name: str):
+    check_master()
     while True:
         typer.echo("Username:")
         username = typer.prompt(">>> ")
@@ -92,13 +135,14 @@ def ls():
     if len(rows) == 0:
         typer.echo("No Passwords Saved")
     else:
-        for row in rows:
+        for row in rows[1:]:
             print(f"{counter}. {str(row[0]).replace('(','').replace(')','').replace("'","").replace(',','').capitalize()} - {row[1]}")
             counter += 1
 
 # Gen Command ==================================================================
 @app.command()
 def gen(pass_name: str, length: int = 16):
+    check_master()
     alpha = list(string.printable)[:-6]
     while True:
         typer.echo("Enter a Username:")
@@ -123,6 +167,7 @@ def gen(pass_name: str, length: int = 16):
 # Get Command ===================================================================
 @app.command()
 def get(pass_name: str):
+    check_master()
     res = cur.execute("SELECT * FROM passwords WHERE passName = ?", [pass_name.lower()])
     rows = res.fetchall()
     index = 1
@@ -134,7 +179,7 @@ def get(pass_name: str):
             count += 1
         index = typer.prompt(">>> ", type = int)
         while True:
-            if index not in range(len(rows) + 1):
+            if index not in range(1, len(rows) + 1):
                 typer.echo("Bad Input")
                 index = typer.prompt(">>> ", type = int)
             else:
@@ -167,6 +212,7 @@ def get(pass_name: str):
 # Remove Command ===============================================================
 @app.command()
 def remove(pass_name: str):
+    check_master()
     res = cur.execute("SELECT * FROM passwords WHERE passName = ?", [pass_name.lower()])
     rows = res.fetchall()
     index = 1
