@@ -64,9 +64,12 @@ def check_master():
 
 # Pull Key from Hash ============================================================
 def getKey(hash):
-    temp = hash.decode()[6:15] 
+    hashStr = hash.decode()[7:]
+    key=''
+    for i in range(int(len(hashStr)/2)):
+        key+=chr(ord(hashStr[i*2])^ord(hashStr[(i*2)+1]))
     charlist = []
-    for char in temp:
+    for char in key:
         if char in string.ascii_letters:
             charlist.append(char)
     return''.join(charlist)[:5]
