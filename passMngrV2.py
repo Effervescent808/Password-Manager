@@ -12,7 +12,7 @@ import os
 import time
 
 # Initialize Database ===========================================================
-DB_PATH = "/home/thaufschild/Documents/code/Python/encryptPass.db"
+DB_PATH = "/home/thaufschild/Documents/code/github-repos/Password-Manager/encryptPass.db"
 
 con = sqlite3.connect(DB_PATH)
 cur = con.cursor()
@@ -131,7 +131,7 @@ def add(pass_name: str):
 
 # List Command =================================================================
 @app.command()
-def ls():
+def listPass():
     res = cur.execute("SELECT passName, username FROM passwords")
     rows = res.fetchall()
     counter = 1
