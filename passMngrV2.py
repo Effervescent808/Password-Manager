@@ -113,8 +113,16 @@ def add(pass_name: str):
         typer.echo("Username:")
         username = typer.prompt(">>> ")
         typer.echo("Password:")
-        password = typer.prompt(">>> ")
-        typer.echo("Are you sure these are correct? (Y/n)")
+        password = typer.prompt(">>> ", hide_input=True)
+        typer.echo("Confirm Password:")
+        check_pass = typer.prompt(">>> ", hide_input=True)
+        while password != check_pass:
+            typer.echo("Passwords do not match")
+            typer.echo("Password:")
+            password = typer.prompt(">>> ", hide_input=True)
+            typer.echo("Confirm Password:")
+            check_pass = typer.prompt(">>> ", hide_input=True)
+        typer.echo("Confirm Entry? (Y/n)")
         answer = typer.prompt(">>> ", default = "")
         while True:
             if answer.lower() in ("y",""):
@@ -151,8 +159,7 @@ def gen(pass_name: str, length: int = 16):
         typer.echo("Enter a Username:")
         username = typer.prompt(">>> ")
         newPass = "".join(random.choice(alpha) for i in range(length))
-        typer.echo("Does this password look good? (Y/n)")
-        typer.echo(newPass)
+        typer.echo("Confirm Entry? (Y/n)")
         answer = typer.prompt(">>> ", default="")
         while True:
             if answer.lower() in ("y",""):
