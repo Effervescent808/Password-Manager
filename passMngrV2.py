@@ -84,7 +84,7 @@ def encrypt(password):
     sym_key=getKey(hashed)
 
     #Remove bad char from end of printable list
-    alpha = list(string.printable)[:-6]
+    alpha = list("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_-+=")
 
     #Rotate letters
     rotate=[]
@@ -93,7 +93,7 @@ def encrypt(password):
     counter = 0
     rotatedPass = ""
     for char in password:
-        charValue = (alpha.index(char) + rotate[counter]) % 94
+        charValue = (alpha.index(char) + rotate[counter]) % 76
         rotatedPass = rotatedPass + alpha[charValue]
         counter = (counter +1)%5
 
@@ -109,6 +109,7 @@ def encrypt(password):
 @app.command()
 def add(pass_name: str):
     check_master()
+    alpha = list("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_-+=")
     while True:
         typer.echo("Username:")
         username = typer.prompt(">>> ")
@@ -116,14 +117,29 @@ def add(pass_name: str):
         password = typer.prompt(">>> ", hide_input=True)
         typer.echo("Confirm Password:")
         check_pass = typer.prompt(">>> ", hide_input=True)
-        while password != check_pass:
-            typer.echo("Passwords do not match")
+        invalid_char=False
+        for char in password:
+            if char not in alpha:
+                invalid_char=True
+
+        while password != check_pass or invalid_char == True:
+            if invalid_char == True:
+                print("Please do not use any of these characters:")
+                print("' \" \\ / < > [ ] { } , . : ; ? | ~ ` space tab") 
+                invalid_char=False
+            else:
+                typer.echo("Passwords do not match")
             typer.echo("Password:")
             password = typer.prompt(">>> ", hide_input=True)
             typer.echo("Confirm Password:")
             check_pass = typer.prompt(">>> ", hide_input=True)
+            for char in password:
+                if char not in alpha:
+                    invalid_char=True
+
         typer.echo("Confirm Entry? (Y/n)")
         answer = typer.prompt(">>> ", default = "")
+
         while True:
             if answer.lower() in ("y",""):
                 encrypted_pass, hash = encrypt(password)
@@ -154,7 +170,7 @@ def listPass():
 @app.command()
 def gen(pass_name: str, length: int = 16):
     check_master()
-    alpha = list(string.printable)[:-6]
+    alpha = list("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_-+=")
     while True:
         typer.echo("Enter a Username:")
         username = typer.prompt(">>> ")
@@ -196,7 +212,7 @@ def get(pass_name: str):
                 break
     id, pass_name, username, password, hash = rows[index - 1]
 
-    alpha = list(string.printable)[:-6]
+    alpha = list("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_-+=")
 
     #Get key + values
     sym_key = getKey(hash)
@@ -213,7 +229,7 @@ def get(pass_name: str):
     counter=0
     unrotatedPass=""
     for i in unxor:
-        unrotatedValue = (alpha.index(i) - charlist[counter]) % 94
+        unrotatedValue = (alpha.index(i) - charlist[counter]) % 76
         unrotatedPass += alpha[unrotatedValue] 
         counter = (counter +1) % 5
 
