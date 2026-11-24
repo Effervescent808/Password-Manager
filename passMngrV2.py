@@ -12,7 +12,7 @@ import os
 import time
 
 # Initialize Database ===========================================================
-DB_PATH = "/home/thaufschild/Documents/code/github-repos/Password-Manager/encryptPass.db"
+DB_PATH = "/path/to/database/file"
 
 con = sqlite3.connect(DB_PATH)
 cur = con.cursor()
